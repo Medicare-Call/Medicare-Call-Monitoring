@@ -1,0 +1,12 @@
+# Runtime data directories
+grafana-data/
+prometheus-data/
+
+# Environment configuration
+.env
+
+# IDE files
+.idea/
+
+# Generated configuration files
+prometheus/prometheus.yml

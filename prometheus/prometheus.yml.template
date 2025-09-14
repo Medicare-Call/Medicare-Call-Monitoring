@@ -1,0 +1,23 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'spring-app'
+    scrape_interval: 5s
+    metrics_path: '/api/actuator/prometheus'
+    static_configs:
+      - targets: ['${MONITORING_TARGET_IP}:${SPRING_SERVER_PORT}']
+
+  - job_name: 'node-app'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['${MONITORING_TARGET_IP}:${NODE_SERVER_PORT}']
+
+  - job_name: 'ec2-instance'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['${MONITORING_TARGET_IP}:${NODE_EXPORTER_PORT}']

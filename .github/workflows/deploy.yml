@@ -1,0 +1,66 @@
+name: Deploy Monitoring Server
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Ensure EC2 directories exist and writable
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            TARGET_DIR=/home/${{ secrets.EC2_USERNAME }}/medicare-call-monitoring-server
+            sudo mkdir -p $TARGET_DIR
+            sudo chown -R ${{ secrets.EC2_USERNAME }}:$${{ secrets.EC2_USERNAME }} $TARGET_DIR
+
+      - name: Copy files to EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_KEY }}
+          source: "."
+          target: "/home/${{ secrets.EC2_USERNAME }}/medicare-call-monitoring-server"
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            cd /home/${{ secrets.EC2_USERNAME }}/medicare-call-monitoring-server
+            
+            echo ".env 파일 생성"
+            cat > .env << EOF
+            MONITORING_TARGET_IP=${{ secrets.MONITORING_TARGET_IP }}
+            SPRING_SERVER_PORT=${{ secrets.SPRING_SERVER_PORT }}
+            NODE_SERVER_PORT=${{ secrets.NODE_SERVER_PORT }}
+            NODE_EXPORTER_PORT=${{ secrets.NODE_EXPORTER_PORT }}
+            PROMETHEUS_PORT=${{ secrets.PROMETHEUS_PORT }}
+            GRAFANA_PORT=${{ secrets.GRAFANA_PORT }}
+            GF_SECURITY_ADMIN_USER=${{ secrets.GF_SECURITY_ADMIN_USER }}
+            GF_SECURITY_ADMIN_PASSWORD=${{ secrets.GF_SECURITY_ADMIN_PASSWORD }}
+            EOF
+            
+            echo "Prometheus 설정 파일 생성"
+            export MONITORING_TARGET_IP=${{ secrets.MONITORING_TARGET_IP }}
+            export SPRING_SERVER_PORT=${{ secrets.SPRING_SERVER_PORT }}
+            export NODE_SERVER_PORT=${{ secrets.NODE_SERVER_PORT }}
+            export NODE_EXPORTER_PORT=${{ secrets.NODE_EXPORTER_PORT }}
+            envsubst < ./prometheus/prometheus.yml.template > ./prometheus/prometheus.yml
+            
+            echo "Docker Compose로 컨테이너 배포"
+            sudo docker compose down || true
+            sudo docker compose up -d
