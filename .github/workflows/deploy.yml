@@ -46,7 +46,9 @@ jobs:
             cat > .env << EOF
             MONITORING_TARGET_IP=${{ secrets.MONITORING_TARGET_IP }}
             SPRING_SERVER_PORT=${{ secrets.SPRING_SERVER_PORT }}
+            SPRING_SERVER_METRICS_PATH=${{ secrets.SPRING_SERVER_METRICS_PATH }}
             NODE_SERVER_PORT=${{ secrets.NODE_SERVER_PORT }}
+            NODE_SERVER_METRICS_PATH=${{ secrets.NODE_SERVER_METRICS_PATH }}
             NODE_EXPORTER_PORT=${{ secrets.NODE_EXPORTER_PORT }}
             PROMETHEUS_PORT=${{ secrets.PROMETHEUS_PORT }}
             GRAFANA_PORT=${{ secrets.GRAFANA_PORT }}
@@ -58,7 +60,9 @@ jobs:
             echo "Prometheus 설정 파일 생성"
             export MONITORING_TARGET_IP=${{ secrets.MONITORING_TARGET_IP }}
             export SPRING_SERVER_PORT=${{ secrets.SPRING_SERVER_PORT }}
+            export SPRING_SERVER_METRICS_PATH=${{ secrets.SPRING_SERVER_METRICS_PATH }}
             export NODE_SERVER_PORT=${{ secrets.NODE_SERVER_PORT }}
+            export NODE_SERVER_METRICS_PATH=${{ secrets.NODE_SERVER_METRICS_PATH }}
             export NODE_EXPORTER_PORT=${{ secrets.NODE_EXPORTER_PORT }}
             envsubst < ./prometheus/prometheus.yml.template > ./prometheus/prometheus.yml
             
